@@ -8,6 +8,8 @@ const {
   aliasTopTours,
   getTourStats,
   getMonthlyPlan,
+  getToursWithin,
+  getDistances,
 } = require('../controllers/toursController');
 const { protect, restrictTo } = require('../controllers/authController');
 const reviewRouter = require('./reviewsRoute');
@@ -26,6 +28,13 @@ router.route('/stats').get(getTourStats);
 router
   .route('/monthly-plan/:year')
   .get(protect, restrictTo('admin', 'lead-guide', 'guide'), getMonthlyPlan);
+
+router
+  .route('/tours-within/:distance/center/:latlng/unit/:unit')
+  .get(getToursWithin);
+
+router.route('/distances/:latlng/unit/:unit').get(getDistances);
+
 router
   .route('/')
   .get(getAllTours)
