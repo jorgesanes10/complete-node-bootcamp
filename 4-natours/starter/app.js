@@ -5,10 +5,12 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
 
 const toursRouter = require('./routes/toursRoute');
 const usersRouter = require('./routes/usersRoute');
 const reviewsRouter = require('./routes/reviewsRoute');
+const viewRouter = require('./routes/viewRoute');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -19,7 +21,24 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-app.use(helmet());
+app.set('view engine', 'pug');
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        'script-src': ["'self'", 'https://unpkg.com'],
+        'connect-src': ["'self'"],
+        'img-src': [
+          "'self'",
+          'https://unpkg.com',
+          'https://tile.openstreetmap.org',
+          'data:',
+        ],
+      },
+    },
+  }),
+);
 
 const limiter = rateLimit({
   max: 100,
@@ -34,6 +53,8 @@ app.use(
     limit: '10kb',
   }),
 );
+
+app.use(cookieParser());
 
 app.use(mongoSanitize());
 app.use(xss());
@@ -54,6 +75,7 @@ app.use(
 
 app.use(express.static(`${__dirname}/public`));
 
+app.use('/', viewRouter);
 app.use('/api/v1/tours', toursRouter);
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/reviews', reviewsRouter);
